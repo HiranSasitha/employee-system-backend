@@ -18,7 +18,7 @@ namespace employee_system.Controllers
         }
         [HttpPost]
         [Route("save")]
-        public async Task<IActionResult> AddEmployee(Department department)
+        public async Task<IActionResult> CreateDepartment([FromBody] Department department)
         {
             department.CreateDate = DateTime.Now;
             _context.Departments.Add(department);
