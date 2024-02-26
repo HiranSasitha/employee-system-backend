@@ -119,7 +119,12 @@ namespace employee_system.Controllers
         [Route("get-all")]
         public async Task<IActionResult> GetAllEmployee()
         {
-            var employees = await _context.Employees.ToListAsync();
+            var employees = await _context.Employees
+     .Include(e => e.DepartmentEmployees) 
+         .ThenInclude(de => de.Department) 
+     .ToListAsync();
+
+
             return Ok(employees);
 
         }
@@ -128,7 +133,10 @@ namespace employee_system.Controllers
         [Route("get-by-id/{id}")]
         public async Task<IActionResult> GetIdByDepartments(int id)
         {
-            var employee = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
+            var employee = await _context.Employees
+       .Include(e => e.DepartmentEmployees)
+       .ThenInclude(de => de.Department)
+       .FirstOrDefaultAsync(x => x.Id == id);
             return Ok(employee);
 
         }
@@ -137,7 +145,11 @@ namespace employee_system.Controllers
         [Route("get-all-order-name")]
         public async Task<IActionResult> GetAllByOrderName()
         {
-            var employees = await _context.Employees.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToListAsync();
+            var employees = await _context.Employees
+                 .Include(e => e.DepartmentEmployees)
+                 .ThenInclude(de => de.Department).OrderBy(ed => ed.FirstName).ThenBy(ed => ed.LastName)
+                 .ToListAsync();
+           
             return Ok(employees);
         }
         [HttpGet]
@@ -145,11 +157,32 @@ namespace employee_system.Controllers
         public async Task<IActionResult> GetAllByOrderDepartment()
         {
             var employees = await _context.Employees
-                .OrderBy(e => e.DepartmentEmployees.FirstOrDefault().Department.Name)
+                .Include(e => e.DepartmentEmployees)
+                .ThenInclude(de => de.Department).OrderBy(e => e.DepartmentEmployees.FirstOrDefault().Department.Name)
                 .ToListAsync();
+            
 
             return Ok(employees);
         }
+
+        [HttpDelete]
+        [Route("delete/{id}")]
+        public async Task<IActionResult> DeleteEmployeeById(int id)
+        {
+            var employee = await _context.Employees
+                .Include(e => e.DepartmentEmployees)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            _context.Employees.Remove(employee);
+            await _context.SaveChangesAsync();
+
+            return Ok("Employee deleted successfully.");
+        }
+
 
 
 
